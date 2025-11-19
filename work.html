@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Log | Reza Respati</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;900&family=Fira+Code:wght@300;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg-color: #D4D0C7; --text-main: #111; --text-sub: #444; --accent: #FF3333; }
+        * { cursor: none; box-sizing: border-box; }
+        body { margin: 0; background: var(--bg-color); color: var(--text-main); font-family: 'Inter'; min-height: 100vh; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+        
+        .noise-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; opacity: 0.08; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .cursor-dot { position: fixed; width: 6px; height: 6px; background: var(--text-main); pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); }
+        .cursor-outline { position: fixed; width: 30px; height: 30px; border: 2px solid var(--text-main); pointer-events: none; z-index: 10000; transition: 0.1s; transform: translate(-50%, -50%); }
+        body.hovering .cursor-outline { width: 50px; height: 50px; border-color: var(--accent); background: rgba(255, 51, 51, 0.1); }
+
+        .navbar { width: 90%; max-width: 1400px; padding-top: 40px; display: flex; justify-content: space-between; z-index: 10; opacity: 0; position: absolute; top: 0; }
+        .nav-logo { font-family: 'Fira Code'; font-weight: 900; text-decoration: none; color: var(--text-main); } .nav-logo span { color: var(--accent); }
+        .nav-menu { display: flex; gap: 50px; list-style: none; } .nav-menu a { font-family: 'Fira Code'; font-size: 0.9rem; text-decoration: none; color: var(--text-main); opacity: 0.7; transition: 0.2s; } .nav-menu a:hover, .nav-menu a.active { opacity: 1; color: var(--accent); text-decoration: underline; }
+
+        .work-layout { display: grid; grid-template-columns: 1fr 1.5fr; width: 85%; max-width: 1400px; min-height: 80vh; margin-top: 120px; align-items: start; gap: 60px; z-index: 2; }
+        .project-list-container { border-top: 2px solid var(--text-main); padding-top: 20px; }
+        .section-header { font-family: 'Fira Code'; font-size: 0.7rem; color: var(--accent); margin-bottom: 30px; }
+        
+        .project-item { padding: 25px 0; border-bottom: 1px dashed var(--text-main); cursor: pointer; transition: 0.3s; opacity: 0; display: flex; flex-direction: column; }
+        .project-item:hover { border-bottom: 1px solid var(--accent); padding-left: 15px; background: rgba(255,255,255,0.3); }
+        .p-meta { font-family: 'Fira Code'; font-size: 0.7rem; color: var(--text-sub); }
+        .p-title { font-size: 2rem; font-weight: 900; margin: 5px 0; line-height: 1; }
+        .p-tech { font-size: 0.8rem; color: var(--text-sub); }
+
+        .visual-container { position: relative; border: 2px solid var(--text-main); height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #DDD9CE; opacity: 0; box-shadow: 8px 8px 0px rgba(0,0,0,0.1); }
+        .grid-bg { position: absolute; width: 100%; height: 100%; background-image: linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+        .chart-wrapper { width: 100%; max-width: 480px; position: relative; z-index: 2; }
+        .detail-panel { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px; border-top: 2px solid var(--text-main); display: flex; justify-content: space-between; align-items: flex-end; background: var(--bg-color); }
+        .detail-desc { font-size: 0.9rem; max-width: 60%; line-height: 1.5; color: var(--text-main); font-family: 'Fira Code'; }
+        .big-number { font-size: 4rem; font-weight: 900; line-height: 0.9; font-family: 'Arial', sans-serif; letter-spacing: -2px; }
+
+        @media (max-width: 900px) { * { cursor: auto; } .cursor-dot, .cursor-outline, .noise-overlay { display: none; } .work-layout { grid-template-columns: 1fr; gap: 40px; } .visual-container { height: 500px; } }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="cursor-dot"></div><div class="cursor-outline"></div>
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo" onmouseenter="hoverLink()" onmouseleave="leaveLink()">REZA<span>.PORTOFOLIO</span></a>
+        <ul class="nav-menu">
+            <li><a href="work.html" class="active">Work</a></li>
+            <li><a href="about.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">About</a></li>
+            <li><a href="notes.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">Notes</a></li>
+            <li><a href="contact.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="work-layout">
+        <div class="project-list-container">
+            <div class="section-header">/// PROJECT_MANIFEST_2024</div>
+            <div class="project-item" onmouseenter="updateProject(0); hoverLink()" onmouseleave="leaveLink()">
+                <span class="p-meta">ID: 001 / WEB</span><h3 class="p-title">E-Commerce AI</h3><span class="p-tech">Machine Learning, React, Node.js</span>
+            </div>
+            <div class="project-item" onmouseenter="updateProject(1); hoverLink()" onmouseleave="leaveLink()">
+                <span class="p-meta">ID: 002 / BRAND</span><h3 class="p-title">Neon Identity</h3><span class="p-tech">After Effects, Illustrator</span>
+            </div>
+            <div class="project-item" onmouseenter="updateProject(2); hoverLink()" onmouseleave="leaveLink()">
+                <span class="p-meta">ID: 003 / UIUX</span><h3 class="p-title">FinTech Dash</h3><span class="p-tech">Figma, Prototyping</span>
+            </div>
+            <div class="project-item" onmouseenter="updateProject(3); hoverLink()" onmouseleave="leaveLink()">
+                <span class="p-meta">ID: 004 / GAME</span><h3 class="p-title">Pixel Engine</h3><span class="p-tech">Canvas API, Vanilla JS</span>
+            </div>
+        </div>
+        <div class="visual-container">
+            <div class="grid-bg"></div>
+            <div class="chart-wrapper"><canvas id="statsChart"></canvas></div>
+            <div class="detail-panel">
+                <div class="detail-desc" id="descText">Description loaded...</div>
+                <div class="detail-stat"><div style="font-family:'Fira Code';font-size:0.7rem;color:var(--accent);">EFFICIENCY</div><div class="big-number" id="scoreText">00</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        const cursorDot = document.querySelector('.cursor-dot'), cursorOutline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', e => { cursorDot.style.left = `${e.clientX}px`; cursorDot.style.top = `${e.clientY}px`; cursorOutline.animate({ left: `${e.clientX}px`, top: `${e.clientY}px` }, { duration: 200, fill: "forwards" }); });
+        function hoverLink() { document.body.classList.add('hovering'); } function leaveLink() { document.body.classList.remove('hovering'); }
+
+        const projects = [
+            { desc: "Advanced AI integration for retail predicting user behavior with 98% accuracy.", score: 92, stats: [95, 60, 70, 40, 90] },
+            { desc: "Complete visual overhaul focusing on kinetic typography and high-contrast motion.", score: 85, stats: [30, 95, 80, 90, 40] },
+            { desc: "High-frequency trading dashboard designed for minimal latency and max readability.", score: 88, stats: [50, 85, 95, 50, 60] },
+            { desc: "Custom game engine built from scratch to push browser rendering limits.", score: 76, stats: [90, 70, 60, 80, 85] }
+        ];
+
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        Chart.defaults.font.family = "'Fira Code', monospace"; Chart.defaults.color = '#111';
+        let animatedData = { v0: projects[0].stats[0], v1: projects[0].stats[1], v2: projects[0].stats[2], v3: projects[0].stats[3], v4: projects[0].stats[4] };
+
+        const myChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['CODE', 'VISUAL', 'UX', 'MOTION', 'LOGIC'],
+                datasets: [{
+                    data: Object.values(animatedData),
+                    backgroundColor: 'rgba(255, 51, 51, 0.0)',
+                    borderColor: '#111', borderWidth: 2,
+                    pointBackgroundColor: '#FF3333', pointBorderColor: '#111', pointRadius: 5, pointStyle: 'rect'
+                }]
+            },
+            options: {
+                scales: { r: { angleLines: { color: '#999' }, grid: { color: '#aaa' }, pointLabels: { font: { size: 11, weight: 'bold' } }, ticks: { display: false }, suggestedMin: 0, suggestedMax: 100 } },
+                plugins: { legend: false, tooltip: { enabled: false } }, animation: false
+            }
+        });
+
+        document.getElementById('descText').innerText = projects[0].desc; document.getElementById('scoreText').innerText = projects[0].score;
+
+        function updateProject(i) {
+            const t = projects[i].stats;
+            anime({ targets: animatedData, v0: t[0], v1: t[1], v2: t[2], v3: t[3], v4: t[4], easing: 'easeOutElastic(1, .5)', duration: 1200, update: () => { myChart.data.datasets[0].data = Object.values(animatedData); myChart.update(); } });
+            anime({ targets: ['#descText', '#scoreText'], opacity: [1, 0], duration: 200, easing: 'linear', complete: () => {
+                document.getElementById('descText').innerText = projects[i].desc; document.getElementById('scoreText').innerText = projects[i].score;
+                anime({ targets: ['#descText', '#scoreText'], opacity: [0, 1], duration: 300 });
+            }});
+        }
+
+        anime.timeline({ easing: 'easeOutExpo' })
+            .add({ targets: '.navbar', opacity: [0, 1], translateY: [-20, 0], duration: 1000 })
+            .add({ targets: '.project-item', opacity: [0, 1], translateX: [-20, 0], delay: anime.stagger(100) }, '-=800')
+            .add({ targets: '.visual-container', opacity: [0, 1], scale: [0.95, 1], duration: 1200 }, '-=1000');
+    </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering Log | Reza Respati</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;900&family=Fira+Code:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: #D4D0C7; --text-main: #111; --text-sub: #444; --accent: #FF3333; --code-bg: #111; --code-text: #eee; }
+        * { cursor: none; box-sizing: border-box; }
+        body { margin: 0; background: var(--bg-color); color: var(--text-main); font-family: 'Inter'; min-height: 100vh; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+        
+        .noise-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; opacity: 0.08; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .cursor-dot { position: fixed; width: 6px; height: 6px; background: var(--text-main); pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); }
+        .cursor-outline { position: fixed; width: 30px; height: 30px; border: 2px solid var(--text-main); pointer-events: none; z-index: 10000; transition: 0.1s; transform: translate(-50%, -50%); }
+        body.hovering .cursor-outline { width: 50px; height: 50px; border-color: var(--accent); background: rgba(255, 51, 51, 0.1); }
+
+        .navbar { width: 90%; max-width: 1400px; padding-top: 40px; display: flex; justify-content: space-between; z-index: 10; opacity: 0; position: absolute; top: 0; }
+        .nav-logo { font-family: 'Fira Code'; font-weight: 900; text-decoration: none; color: var(--text-main); } .nav-logo span { color: var(--accent); }
+        .nav-menu { display: flex; gap: 50px; list-style: none; } .nav-menu a { font-family: 'Fira Code'; font-size: 0.9rem; text-decoration: none; color: var(--text-main); opacity: 0.7; transition: 0.2s; } .nav-menu a:hover, .nav-menu a.active { opacity: 1; color: var(--accent); text-decoration: underline; }
+
+        .notes-layout { width: 85%; max-width: 1000px; margin-top: 150px; display: flex; flex-direction: column; gap: 40px; z-index: 2; }
+        .header-section { border-bottom: 4px solid var(--text-main); padding-bottom: 20px; opacity: 0; }
+        h1 { font-size: 3.5rem; margin: 0; font-weight: 900; letter-spacing: -2px; }
+        
+        .search-bar { display: flex; align-items: center; gap: 15px; margin-top: 20px; border: 2px solid var(--text-main); padding: 15px 20px; background: #DDD9CE; box-shadow: 5px 5px 0px rgba(0,0,0,0.1); }
+        .cmd-prompt { font-family: 'Fira Code'; color: var(--accent); font-weight: bold; white-space: nowrap; flex-shrink: 0; }
+        input[type="text"] { border: none; outline: none; font-family: 'Fira Code'; font-size: 1rem; width: 100%; color: var(--text-main); background: transparent; }
+        
+        .filter-tags { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .tag { font-family: 'Fira Code'; font-size: 0.7rem; padding: 8px 16px; border: 2px solid var(--text-main); cursor: pointer; transition: 0.2s; background: var(--bg-color); }
+        .tag:hover, .tag.active { background: var(--text-main); color: #fff; }
+
+        .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .note-card { background: #DDD9CE; border: 2px solid var(--text-main); padding: 25px; opacity: 0; transform: translateY(20px); display: flex; flex-direction: column; transition: 0.2s; box-shadow: 5px 5px 0px rgba(0,0,0,0.15); }
+        .note-card:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0px var(--accent); border-color: var(--text-main); }
+        .n-meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-family: 'Fira Code'; font-size: 0.7rem; color: var(--text-sub); border-bottom: 1px dashed #999; padding-bottom: 10px; }
+        .n-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 15px 0; line-height: 1.2; }
+        .n-content-text { font-size: 0.9rem; line-height: 1.5; color: var(--text-sub); }
+        .n-code-block { background: var(--code-bg); color: var(--code-text); padding: 15px; font-family: 'Fira Code'; font-size: 0.75rem; margin-top: auto; position: relative; border-left: 3px solid var(--accent); overflow-x: auto; }
+
+        @media (max-width: 900px) { * { cursor: auto; } .cursor-dot, .cursor-outline, .noise-overlay { display: none; } .notes-layout { margin-top: 100px; } }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="cursor-dot"></div><div class="cursor-outline"></div>
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo" onmouseenter="hoverLink()" onmouseleave="leaveLink()">REZA<span>.PORTOFOLIO</span></a>
+        <ul class="nav-menu">
+            <li><a href="work.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">Work</a></li>
+            <li><a href="about.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">About</a></li>
+            <li><a href="notes.html" class="active">Notes</a></li>
+            <li><a href="contact.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="notes-layout">
+        <div class="header-section">
+            <h1>Archive_Log.</h1>
+            <div class="search-bar" onmouseenter="hoverLink()" onmouseleave="leaveLink()">
+                <span class="cmd-prompt">root@db:~#</span>
+                <input type="text" placeholder="grep 'keyword'..." id="searchInput">
+            </div>
+            <div class="filter-tags">
+                <div class="tag active" onclick="filterNotes('all')" onmouseenter="hoverLink()" onmouseleave="leaveLink()">ALL</div>
+                <div class="tag" onclick="filterNotes('css')" onmouseenter="hoverLink()" onmouseleave="leaveLink()">CSS</div>
+                <div class="tag" onclick="filterNotes('js')" onmouseenter="hoverLink()" onmouseleave="leaveLink()">JS</div>
+                <div class="tag" onclick="filterNotes('git')" onmouseenter="hoverLink()" onmouseleave="leaveLink()">GIT</div>
+                <div class="tag" onclick="filterNotes('thought')" onmouseenter="hoverLink()" onmouseleave="leaveLink()">THOUGHTS</div>
+            </div>
+        </div>
+
+        <div class="notes-grid">
+            <div class="note-card" data-category="css" onmouseenter="hoverLink()" onmouseleave="leaveLink()">
+                <div class="n-meta"><span>18.11.24</span><span>CSS</span></div><h3 class="n-title">Perfect Center Div</h3><div class="n-code-block"><pre>.element { display: grid; place-items: center; }</pre></div>
+            </div>
+            <div class="note-card" data-category="js" onmouseenter="hoverLink()" onmouseleave="leaveLink()">
+                <div class="n-meta"><span>22.10.24</span><span>JS</span></div><h3 class="n-title">Remove Duplicates</h3><div class="n-code-block"><pre>const unique = [...new Set(arr)];</pre></div>
+            </div>
+            <div class="note-card" data-category="git" onmouseenter="hoverLink()" onmouseleave="leaveLink()">
+                <div class="n-meta"><span>10.09.24</span><span>GIT</span></div><h3 class="n-title">Undo Last Commit</h3><div class="n-code-block"><pre>git reset --soft HEAD~1</pre></div>
+            </div>
+            <div class="note-card" data-category="thought" onmouseenter="hoverLink()" onmouseleave="leaveLink()">
+                <div class="n-meta"><span>05.08.24</span><span>THOUGHT</span></div><h3 class="n-title">Why I love minimal UI</h3><p class="n-content-text">Design isn't just about what you add, it's about what you take away.</p>
+            </div>
+            <div class="note-card" data-category="css" onmouseenter="hoverLink()" onmouseleave="leaveLink()">
+                <div class="n-meta"><span>12.07.24</span><span>CSS</span></div><h3 class="n-title">Custom Scrollbar</h3><div class="n-code-block"><pre>::-webkit-scrollbar { width: 8px; }</pre></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        const cursorDot = document.querySelector('.cursor-dot'), cursorOutline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', e => { cursorDot.style.left = `${e.clientX}px`; cursorDot.style.top = `${e.clientY}px`; cursorOutline.animate({ left: `${e.clientX}px`, top: `${e.clientY}px` }, { duration: 200, fill: "forwards" }); });
+        function hoverLink() { document.body.classList.add('hovering'); } function leaveLink() { document.body.classList.remove('hovering'); }
+
+        anime.timeline({ easing: 'easeOutExpo' })
+            .add({ targets: '.navbar', opacity: [0, 1], translateY: [-20, 0], duration: 1000 })
+            .add({ targets: '.header-section', opacity: [0, 1], translateY: [20, 0], duration: 800 }, '-=800')
+            .add({ targets: '.note-card', opacity: [0, 1], translateY: [50, 0], delay: anime.stagger(100) }, '-=600');
+
+        function filterNotes(cat) {
+            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); event.target.classList.add('active');
+            document.querySelectorAll('.note-card').forEach(c => {
+                c.style.display = (cat === 'all' || c.dataset.category === cat) ? 'flex' : 'none';
+                if(c.style.display === 'flex') anime({ targets: c, opacity: [0, 1], scale: [0.95, 1], duration: 400, easing: 'easeOutQuad' });
+            });
+        }
+        document.getElementById('searchInput').addEventListener('keyup', e => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.note-card').forEach(c => {
+                c.style.display = (c.innerText.toLowerCase().includes(term)) ? 'flex' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reza Respati | Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;900&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: #D4D0C7; --text-main: #111; --text-sub: #444; --accent: #FF3333; }
+        * { cursor: none; box-sizing: border-box; }
+        body { margin: 0; background-color: var(--bg-color); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        
+        /* TEXTURE & CURSOR */
+        .noise-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; opacity: 0.08; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .cursor-dot { position: fixed; width: 6px; height: 6px; background: var(--text-main); pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); }
+        .cursor-outline { position: fixed; width: 30px; height: 30px; border: 2px solid var(--text-main); pointer-events: none; z-index: 10000; transition: 0.1s; transform: translate(-50%, -50%); }
+        body.hovering .cursor-outline { width: 50px; height: 50px; border-color: var(--accent); background: rgba(255, 51, 51, 0.1); }
+
+        /* UI */
+        .bg-typography { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 28vw; font-weight: 900; letter-spacing: -10px; color: rgba(0,0,0,0.04); white-space: nowrap; z-index: 0; pointer-events: none; font-family: 'Arial'; }
+        .navbar { width: 90%; max-width: 1400px; padding-top: 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; opacity: 0; position: absolute; top: 0; }
+        .nav-logo { font-family: 'Fira Code'; font-weight: 900; text-decoration: none; color: var(--text-main); } .nav-logo span { color: var(--accent); }
+        .nav-menu { display: flex; gap: 50px; list-style: none; padding: 0; }
+        .nav-menu li a { font-family: 'Fira Code'; font-size: 0.9rem; text-decoration: none; color: var(--text-main); opacity: 0.7; transition: 0.2s; }
+        .nav-menu li a:hover { opacity: 1; color: var(--accent); text-decoration: underline; }
+
+        .main-layout { display: grid; grid-template-columns: 1fr 450px 1fr; width: 85%; max-width: 1400px; height: 100%; z-index: 2; align-items: center; }
+        .serial-number { font-family: 'Fira Code'; font-size: 0.7rem; color: var(--accent); margin-bottom: 20px; display: block; opacity: 0; }
+        h1 { font-size: 5.5rem; line-height: 0.9; margin: 0 0 30px 0; letter-spacing: -4px; font-weight: 900; opacity: 0; transform: translateY(20px); }
+        .subtitle { font-family: 'Fira Code'; font-size: 0.85rem; color: var(--text-sub); line-height: 1.6; border-left: 3px solid var(--text-main); padding-left: 20px; opacity: 0; }
+
+        .center-visual { position: relative; height: 550px; display: flex; justify-content: center; align-items: center; perspective: 1500px; }
+        .frame-outline { position: absolute; width: 100%; height: 100%; border: 2px dashed rgba(0,0,0,0.2); pointer-events: none; }
+        .photo-wrapper { width: 340px; height: 460px; background: #999; border: 3px solid var(--text-main); position: relative; opacity: 0; transform-style: preserve-3d; will-change: transform; filter: grayscale(100%) contrast(1.2) brightness(0.9); box-shadow: 15px 15px 0px rgba(0,0,0,0.1); }
+        .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; mix-blend-mode: hard-light; }
+        .photo-label { position: absolute; bottom: -35px; right: 0; font-family: 'Fira Code'; font-size: 0.7rem; font-weight: bold; }
+
+        .right-content { padding-left: 80px; }
+        .skill-item { display: flex; align-items: center; margin-bottom: 25px; opacity: 0; transform: translateX(20px); cursor: pointer; }
+        .skill-dot { width: 10px; height: 10px; background: var(--text-main); margin-right: 20px; transition: 0.2s; }
+        .skill-label { font-family: 'Inter'; font-weight: 700; font-size: 1rem; text-transform: uppercase; transition: 0.2s; }
+        .skill-item:hover .skill-dot { background: var(--accent); }
+        .skill-item:hover .skill-label { text-decoration: line-through; color: var(--text-sub); }
+
+        .bottom-info { position: absolute; bottom: 40px; width: 90%; max-width: 1400px; display: flex; justify-content: space-between; font-family: 'Fira Code'; font-size: 0.7rem; z-index: 5; opacity: 0; }
+        .status-dot { width: 8px; height: 8px; background: #00cc66; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @media (max-width: 900px) { * { cursor: auto; } .cursor-dot, .cursor-outline, .noise-overlay { display: none; } .main-layout { grid-template-columns: 1fr; text-align: center; margin-top: 60px; } .subtitle { border-left: none; } .right-content { padding: 0; align-items: center; margin-top: 40px; } .center-visual { height: 350px; margin: 30px 0; } h1 { font-size: 3.5rem; } .nav-menu { display: none; } .navbar { justify-content: center; } .bg-typography { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="cursor-dot"></div><div class="cursor-outline"></div>
+    <div class="bg-typography" id="bgTypo">RESPATI</div>
+
+    <!-- NAVIGATION HUB -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo" onmouseenter="hoverLink()" onmouseleave="leaveLink()">REZA<span>.PORTOFOLIO</span></a>
+        <ul class="nav-menu">
+            <li><a href="work.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">Work</a></li>
+            <li><a href="about.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">About</a></li>
+            <li><a href="notes.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">Notes</a></li>
+            <li><a href="contact.html" onmouseenter="hoverLink()" onmouseleave="leaveLink()">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-layout">
+        <div class="left-content">
+            <span class="serial-number">REF: 2025 / 001</span>
+            <h1 class="hero-title">Visual<br>Architect.</h1>
+            <p class="subtitle">Reza Respati P.<br>Web Developer & Designer focusing on immersive digital experiences and raw aesthetics.</p>
+        </div>
+        <div class="center-visual" id="visualArea">
+            <div class="frame-outline"></div>
+            <div class="photo-wrapper" id="myPhoto">
+                <img src="images/reza.jpg" alt="Reza Portrait">
+            </div>
+            <div class="photo-label">IMG_001.RAW</div>
+        </div>
+        <div class="right-content">
+            <div class="skill-item" onmouseenter="hoverLink()" onmouseleave="leaveLink()"><div class="skill-dot"></div><div class="skill-label">Development</div></div>
+            <div class="skill-item" onmouseenter="hoverLink()" onmouseleave="leaveLink()"><div class="skill-dot"></div><div class="skill-label">Interface Design</div></div>
+            <div class="skill-item" onmouseenter="hoverLink()" onmouseleave="leaveLink()"><div class="skill-dot"></div><div class="skill-label">Motion / 3D</div></div>
+            <div class="skill-item" onmouseenter="hoverLink()" onmouseleave="leaveLink()"><div class="skill-dot"></div><div class="skill-label">System Architecture</div></div>
+        </div>
+    </div>
+
+    <div class="bottom-info">
+        <div class="coords"><span>LAT: -6.2088</span> <span>LON: 106.8456</span></div>
+        <div><span class="status-dot"></span> ONLINE</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        const cursorDot = document.querySelector('.cursor-dot'), cursorOutline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', e => { cursorDot.style.left = `${e.clientX}px`; cursorDot.style.top = `${e.clientY}px`; cursorOutline.animate({ left: `${e.clientX}px`, top: `${e.clientY}px` }, { duration: 200, fill: "forwards" }); });
+        function hoverLink() { document.body.classList.add('hovering'); } function leaveLink() { document.body.classList.remove('hovering'); }
+        
+        const bgTypo = document.getElementById('bgTypo');
+        window.addEventListener('mousemove', e => { const x = (window.innerWidth - e.pageX * 2) / 60; const y = (window.innerHeight - e.pageY * 2) / 60; bgTypo.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`; });
+
+        var tl = anime.timeline({ easing: 'easeOutExpo', duration: 1200 });
+        tl.add({ targets: '.navbar', opacity: [0, 1], translateY: [-20, 0], duration: 1000 })
+          .add({ targets: '.serial-number', opacity: [0, 1], translateX: [-10, 0], duration: 800 }, '-=800')
+          .add({ targets: 'h1', opacity: [0, 1], translateY: [30, 0], duration: 1200 }, '-=600')
+          .add({ targets: '.subtitle', opacity: [0, 1], translateX: [20, 0], duration: 1000 }, '-=1000')
+          .add({ targets: '.photo-wrapper', opacity: [0, 1], scale: [0.9, 1], duration: 1500, easing: 'easeOutQuart' }, '-=1200')
+          .add({ targets: '.skill-item', opacity: [0, 1], translateX: [20, 0], delay: anime.stagger(100) }, '-=1000')
+          .add({ targets: '.bottom-info', opacity: [0, 1], translateY: [20, 0], duration: 800 }, '-=800')
+          .add({ targets: '.bg-typography', opacity: [0, 0.04], duration: 2000 }, '-=2000');
+
+        const visualArea = document.getElementById('visualArea'), photo = document.getElementById('myPhoto');
+        visualArea.addEventListener('mousemove', e => {
+            const rect = visualArea.getBoundingClientRect();
+            const x = e.clientX - rect.left, y = e.clientY - rect.top, centerX = rect.width / 2, centerY = rect.height / 2;
+            anime({ targets: photo, rotateX: -((y - centerY) / centerY) * 8, rotateY: ((x - centerX) / centerX) * 8, duration: 50, easing: 'linear' });
+        });
+        visualArea.addEventListener('mouseleave', () => { anime({ targets: photo, rotateX: 0, rotateY: 0, duration: 1000, easing: 'easeOutExpo' }); });
+    </script>
+</body>
+</html>
